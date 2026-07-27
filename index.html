@@ -85,7 +85,7 @@
       inset 0 0 40px rgba(255,255,255,0.02);
     color: var(--text-main);
     overflow:hidden;
-    transition: width 0.35s ease, padding 0.35s ease;
+    transition: width 0.35s ease, padding 0.35s ease, zoom 0.25s ease;
   }
 
   .player::before{
@@ -415,6 +415,7 @@
   .player.mini .station-genre,
   .player.mini .waveform,
   .player.mini .station-dots,
+  .player.mini .volume-control,
   .player.mini .tracklist-panel{ display:none; }
   .player.mini .station-name{ font-size:17px; }
   .player.mini .status-row{ margin-bottom:14px; }
@@ -577,6 +578,95 @@
   .play-btn svg{ width:22px; height:22px; fill:#0a0b0d; }
   .play-btn:hover{ background: var(--on-air); filter:brightness(1.08); }
 
+  /* ---------- Station name row + volume icon ---------- */
+  .station-name-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .volume-control{
+    position:relative;
+    display:flex;
+    align-items:center;
+  }
+  .volume-icon-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: var(--text-dim);
+    cursor:pointer;
+    transition: color 0.2s ease;
+    flex-shrink:0;
+  }
+  .volume-icon-wrap:hover{ color: var(--text-main); }
+  .volume-icon-wrap svg{ width:16px; height:16px; }
+
+  /* Slider now comes after the icon in markup so it opens/grows to the right */
+  .volume-slider-wrap{
+    display:flex;
+    align-items:center;
+    width:0;
+    opacity:0;
+    overflow:hidden;
+    margin-left:0;
+    pointer-events:none;
+    transition: width 0.25s ease, opacity 0.2s ease, margin-left 0.25s ease;
+  }
+  .volume-control:hover .volume-slider-wrap,
+  .volume-control:focus-within .volume-slider-wrap{
+    width:90px;
+    opacity:1;
+    margin-left:8px;
+    pointer-events:auto;
+  }
+
+  /* Thin black line track, plain white round thumb */
+  .volume-slider{
+    -webkit-appearance: none;
+    appearance: none;
+    width:100%;
+    height:16px;
+    background: transparent;
+    cursor:pointer;
+    margin:0;
+  }
+  /* Webkit (Chrome, Safari, Edge) */
+  .volume-slider::-webkit-slider-runnable-track{
+    height:1px;
+    background:#000;
+    border-radius:0;
+  }
+  .volume-slider::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#fff;
+    border:none;
+    margin-top:-4.5px;
+    box-shadow:0 0 2px rgba(0,0,0,0.6);
+  }
+  /* Firefox */
+  .volume-slider::-moz-range-track{
+    height:1px;
+    background:#000;
+    border-radius:0;
+  }
+  .volume-slider::-moz-range-progress{
+    height:1px;
+    background:#000;
+  }
+  .volume-slider::-moz-range-thumb{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:#fff;
+    border:none;
+    box-shadow:0 0 2px rgba(0,0,0,0.6);
+  }
+
   /* ---------- Station dots ---------- */
   .station-dots{
     display:flex;
@@ -642,7 +732,17 @@
     </div>
 
     <div class="track-info">
-      <div class="station-name" id="stationName">Gym</div>
+      <div class="station-name-row">
+        <div class="station-name" id="stationName">Gym</div>
+        <div class="volume-control" id="volumeControl">
+          <span class="volume-icon-wrap" id="volumeBtn" role="button" tabindex="0" aria-label="Mute or unmute">
+            <svg id="volumeIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+          </span>
+          <div class="volume-slider-wrap">
+            <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="90" aria-label="Volume">
+          </div>
+        </div>
+      </div>
       <div class="station-genre" id="stationGenre">High-BPM Power Hour</div>
       <div class="waveform paused" id="waveform">
         <span style="animation-delay:0s"></span>
@@ -661,7 +761,7 @@
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
     </button>
     <button class="ctrl-btn play-btn" id="playBtn" aria-label="Play or pause">
-      <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
     </button>
     <button class="ctrl-btn" id="nextBtn" aria-label="Next station">
       <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg>
@@ -803,7 +903,7 @@
            linear-gradient(160deg, #14101f 0%, #0a0b0d 70%)`,
       glow: "radial-gradient(circle, rgba(124,42,94,0.35), transparent 65%)",
       tracks: [
-        { title: "Self Aware", artist: "Temper City", duration: "3:00", src: "music/night/1.mp3" },
+        { title: "After Hours Exit", artist: "Velvet Static", duration: "5:44", src: "music/night/1.mp3" },
         { title: "Basement Signal", artist: "Nocturn", duration: "6:02", src: "music/night/2.mp3" },
         { title: "Neon in the Rain", artist: "Velvet Static", duration: "5:18", src: "music/night/3.mp3" },
         { title: "3 AM Freeway", artist: "Low Orbit", duration: "5:55", src: "music/night/4.mp3" },
@@ -842,6 +942,10 @@
   const dotsWrap = document.getElementById('stationDots');
   const tracklistEl = document.getElementById('tracklist');
   const tracklistStationName = document.getElementById('tracklistStationName');
+  const volumeBtn = document.getElementById('volumeBtn');
+  const volumeSlider = document.getElementById('volumeSlider');
+  const volumeIcon = document.getElementById('volumeIcon');
+  let lastVolume = 0.9;
 
   function buildDots(){
     dotsWrap.innerHTML = '';
@@ -972,8 +1076,8 @@
     waveform.classList.toggle('paused', !playing);
     tonearm.classList.toggle('playing', playing);
     playIcon.innerHTML = playing
-      ? '<path d="M8 5v14l11-7z"/>'
-      : '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+      ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'
+      : '<path d="M8 5v14l11-7z"/>';
   }
 
   function loadTrack(autoplay){
@@ -1023,6 +1127,44 @@
   document.getElementById('prevBtn').addEventListener('click', ()=> goTo(current-1));
   document.getElementById('nextBtn').addEventListener('click', ()=> goTo(current+1));
   playBtn.addEventListener('click', togglePlay);
+
+  const volumeIconOn = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+  const volumeIconMuted = '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zM19 12c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06a8.99 8.99 0 0 0 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+
+  function updateVolumeIcon(){
+    const muted = audioEl.muted || audioEl.volume === 0;
+    volumeIcon.innerHTML = muted ? volumeIconMuted : volumeIconOn;
+  }
+
+  function toggleMute(){
+    if(audioEl.muted || audioEl.volume === 0){
+      audioEl.muted = false;
+      audioEl.volume = lastVolume > 0 ? lastVolume : 0.9;
+      volumeSlider.value = Math.round(audioEl.volume * 100);
+    }else{
+      lastVolume = audioEl.volume;
+      audioEl.muted = true;
+    }
+    updateVolumeIcon();
+  }
+
+  volumeBtn.addEventListener('click', toggleMute);
+  volumeBtn.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      toggleMute();
+    }
+  });
+
+  volumeSlider.addEventListener('input', ()=>{
+    const v = Number(volumeSlider.value) / 100;
+    audioEl.volume = v;
+    audioEl.muted = (v === 0);
+    if(v > 0) lastVolume = v;
+    updateVolumeIcon();
+  });
+
+  updateVolumeIcon();
 
   /* ---------- Mini / expanded view toggle ---------- */
   const player = document.querySelector('.player');
@@ -1141,7 +1283,7 @@
         e.preventDefault();
         goTo(current-1);
         break;
-      case 'KeyS':
+      case 'KeyM':
         toggleMini();
         break;
       case 'KeyT':
@@ -1162,6 +1304,19 @@
   }
   render();
   loadTrack(false);
+
+  function applyPanelScale(){
+    const naturalWidth = 480;
+    const targetWidth = window.innerWidth * (2/3);
+    const scale = Math.min(2.4, Math.max(0.85, targetWidth / naturalWidth));
+    player.style.zoom = scale;
+  }
+  applyPanelScale();
+  let resizeTimer = null;
+  window.addEventListener('resize', ()=>{
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(applyPanelScale, 120);
+  });
 </script>
 
 </body>
