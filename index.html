@@ -1537,7 +1537,7 @@
       return;
     }
     const targetWidth = window.innerWidth * (2/5);
-    const scale = Math.min(1.5, Math.max(0.6, targetWidth / naturalWidth));
+    const scale = Math.max(0.6, targetWidth / naturalWidth);
     player.style.zoom = scale;
   }
   applyPanelScale();
